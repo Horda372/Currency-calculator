@@ -1,0 +1,31 @@
+package com.example.currencyexchange.service;
+
+import com.example.ExchangeRate;
+import com.example.ExchangeRateRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class CurrencyExchangeService {
+
+    private final ExchangeRateRepository exchangeRateRepository;
+    private final RestTemplate restTemplate;
+
+    private static final String NBP_API_URL = "https://api.nbp.pl/api/exchangerates/rates/A/{sourceCurrency}/{targetCurrency}/";
+
+    @Autowired
+    public CurrencyExchangeService(ExchangeRateRepository exchangeRateRepository, RestTemplate restTemplate) {
+        this.exchangeRateRepository = exchangeRateRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    public ExchangeRate getExchangeRate(String sourceCurrency, String targetCurrency) {
+        String apiUrl = NBP_API_URL.replace("{sourceCurrency}", sourceCurrency).replace("{targetCurrency}", targetCurrency);
+        ExchangeRate exchangeRate = restTemplate.getForObject(apiUrl, ExchangeRate.class);
+        if (exchangeRate != null) {
+            exchangeRateRepository.save(exchangeRate); // Assuming you have a repository to save the exchange rate
+        }
+        return exchangeRate;
+    }
+}
